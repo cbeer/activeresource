@@ -134,6 +134,7 @@ def setup_response
     mock.get    "/sounds/1.json",                {}, @startup_sound
     # post
     mock.get    "/posts.json",                   {}, @posts
+    mock.post  "/posts.json",                   {}, @post
     mock.get    "/posts/1.json",                 {}, @post
     mock.get    "/posts/1/comments.json",        {}, @comments
     mock.get    "/posts/1/comments/1.json",      {}, @comment

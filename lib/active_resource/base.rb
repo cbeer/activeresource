@@ -941,6 +941,9 @@ module ActiveResource
       rescue ActiveResource::ResourceNotFound, ActiveResource::ResourceGone
         false
       end
+      def is_prefix_parameter? p
+        prefix_parameters.include? p.to_sym
+      end
 
       private
 

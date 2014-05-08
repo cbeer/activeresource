@@ -1353,11 +1353,27 @@ class BaseTest < ActiveSupport::TestCase
   end
   
   def test_belongs_to_builder
+    ActiveResource::HttpMock.respond_to do |mock|
+      mock.post  "/customers.json",                   {}, @customer
+      mock.post  "/people.json",                   {}, @david
+    end
     External::Person.belongs_to(:customer)
     p = External::Person.new
     c = p.build_customer
     assert_kind_of Customer, c
     c.name = "Ted"
     p.save
+  end
+  
+  def test_belongs_to_nested    
+    ActiveResource::HttpMock.respond_to do |mock|
+      mock.post  "/posts.json",                   {}, @post
+      mock.post  "/posts/1/comments.json",                   {}, nil
+    end
+    Comment.belongs_to(:post)
+    c = Comment.new
+    p = c.build_post
+    assert_kind_of Post, p
+    c.save
   end
 end
