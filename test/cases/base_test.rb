@@ -1239,6 +1239,12 @@ class BaseTest < ActiveSupport::TestCase
     end
   end
 
+  def test_parse_resource_with_belongs_to_resource
+    Comment.send(:belongs_to, :post)
+    comment = Comment.find(1, params: { post_id: 1 })
+    assert_kind_of Post, comment.post
+  end
+
   def test_parse_resource_with_given_has_one_resources
     Customer.send(:has_one, :mother, :class_name => "external/person")
     luis = Customer.find(1)

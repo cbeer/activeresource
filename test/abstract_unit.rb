@@ -30,7 +30,7 @@ def setup_response
   @post  = {:id => 1, :title => 'Hello World', :body => 'Lorem Ipsum'}.to_json
   @posts = [{:id => 1, :title => 'Hello World', :body => 'Lorem Ipsum'},{:id => 2, :title => 'Second Post', :body => 'Lorem Ipsum'}].to_json
   @comments = [{:id => 1, :post_id => 1, :content => 'Interesting post'},{:id => 2, :post_id => 1, :content => 'I agree'}].to_json
-
+  @comment = { :comment => {:id => 1, :post_id => 1, :content => 'Interesting post'} }.to_json
   # - deep nested resource -
   # - Luis (Customer)
   #   - JK (Customer::Friend)
@@ -95,7 +95,7 @@ def setup_response
   ActiveResource::HttpMock.respond_to do |mock|
     mock.get    "/people/1.json",               {}, @matz
     mock.get    "/people/1.xml",                {}, @matz_xml
-    mock.get    "/people/2.xml",                {}, @david
+    mock.get    "/people/2.json",               {}, @david
     mock.get    "/people/Greg.json",            {}, @greg
     mock.get    "/people/6.json",               {}, @joe
     mock.get    "/people/4.json",               { 'key' => 'value' }, nil, 404
@@ -136,6 +136,7 @@ def setup_response
     mock.get    "/posts.json",                   {}, @posts
     mock.get    "/posts/1.json",                 {}, @post
     mock.get    "/posts/1/comments.json",        {}, @comments
+    mock.get    "/posts/1/comments/1.json",      {}, @comment
     # products
     mock.get '/products/1.json', {}, @product
     mock.get '/products/1/inventory.json', {}, @inventory

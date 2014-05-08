@@ -14,6 +14,7 @@ module ActiveResource::Associations
   autoload :SingularAssociation,     'active_resource/associations/singular_association'
   autoload :HasManyAssociation,     'active_resource/associations/has_many_association'
   autoload :HasOneAssociation,     'active_resource/associations/has_one_association'
+  autoload :BelongsToAssociation,     'active_resource/associations/belongs_to_association'
   autoload :Delegation,     'active_resource/associations/delegation'
   autoload :Relation,     'active_resource/associations/relation'
   autoload :AssociationRelation,     'active_resource/associations/association_relation'
