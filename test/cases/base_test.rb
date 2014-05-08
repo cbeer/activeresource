@@ -1348,8 +1348,16 @@ class BaseTest < ActiveSupport::TestCase
     assert_equal "/customers",      Customer.collection_path
     assert_equal "/customers/1",    Customer.element_path(1)
     assert_equal "/customers/new",  Customer.new_element_path
-
   ensure
     ActiveResource::Base.include_format_in_path = true
+  end
+  
+  def test_belongs_to_builder
+    External::Person.belongs_to(:customer)
+    p = External::Person.new
+    c = p.build_customer
+    assert_kind_of Customer, c
+    c.name = "Ted"
+    p.save
   end
 end

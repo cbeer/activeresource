@@ -37,6 +37,7 @@ module ActiveResource
       def initialize(macro, name, options)
         @macro, @name, @options = macro, name, options
         @constructable = calculate_constructable(macro, options)
+        @collection = :has_many == macro
       end
 
       # Returns the name of the macro.
@@ -105,6 +106,25 @@ module ActiveResource
       
       def association_primary_key klass
         klass.primary_key
+      end
+      
+      # Returns whether or not this association reflection is for a collection
+      # association. Returns +true+ if the +macro+ is either +has_many+ or
+      # +has_and_belongs_to_many+, +false+ otherwise.
+      def collection?
+        @collection
+      end
+      # Returns whether or not the association should be validated as part of
+      # the parent's validation.
+      #
+      # Unless you explicitly disable validation with
+      # <tt>validate: false</tt>, validation will take place when:
+      #
+      # * you explicitly enable validation; <tt>validate: true</tt>
+      # * you use autosave; <tt>autosave: true</tt>
+      # * the association is a +has_many+ association
+      def validate?
+        !options[:validate].nil? ? options[:validate] : (options[:autosave] == true || macro == :has_many)
       end
       
       def check_validity!

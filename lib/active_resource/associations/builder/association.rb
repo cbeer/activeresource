@@ -1,6 +1,12 @@
 module ActiveResource::Associations::Builder
   class Association #:nodoc:
 
+    class << self
+      attr_accessor :extensions
+    end
+        self.extensions = []
+
+
     # providing a Class-Variable, which will have a different store of subclasses
     class_attribute :valid_options
     self.valid_options = [:class_name]
@@ -15,6 +21,7 @@ module ActiveResource::Associations::Builder
       builder = create_builder model, name, options
       reflection = builder.build
       define_accessors model, reflection
+      define_callbacks model, reflection
       builder.define_extensions model
       reflection
     end
@@ -42,6 +49,13 @@ module ActiveResource::Associations::Builder
       define_readers(mixin, name)
       define_writers(mixin, name)
     end
+    
+    def self.define_callbacks(model, reflection)
+      add_before_destroy_callbacks(model, reflection) if reflection.options[:dependent]
+      Association.extensions.each do |extension|
+        extension.build model, reflection
+      end
+    end
 
     def self.define_readers(mixin, name)
       mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
@@ -68,6 +82,15 @@ module ActiveResource::Associations::Builder
 
     def validate_options
       options.assert_valid_keys(self.class.valid_options)
+    end
+
+    def self.add_before_destroy_callbacks(model, reflection)
+      unless valid_dependent_options.include? reflection.options[:dependent]
+        raise ArgumentError, "The :dependent option must be one of #{valid_dependent_options}, but is :#{reflection.options[:dependent]}"
+      end
+
+      name = reflection.name
+      model.before_destroy lambda { |o| o.association(name).handle_dependency }
     end
   end
 end

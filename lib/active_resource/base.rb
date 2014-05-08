@@ -1576,6 +1576,7 @@ module ActiveResource
   class Base
     extend ActiveModel::Naming
     include ActiveResource::Associations
+    include ActiveResource::AutosaveAssociation
 
     include Callbacks, Core, CustomMethods, Observing, Validations
     include ActiveModel::Conversion

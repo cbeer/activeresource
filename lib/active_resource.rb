@@ -29,6 +29,8 @@ require 'active_resource/version'
 module ActiveResource
   extend ActiveSupport::Autoload
 
+  autoload :Association
+  autoload :AutosaveAssociation
   autoload :Base
   autoload :Callbacks
   autoload :Connection
