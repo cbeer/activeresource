@@ -1,4 +1,14 @@
 module ActiveResource
+  
+  # = Active Record Errors
+  #
+  # Generic Active Record exception class.
+  class ActiveResourceError < StandardError
+  end
+  
+  class ConfigurationError < ActiveResourceError
+  end
+  
   class ConnectionError < StandardError # :nodoc:
     attr_reader :response
 

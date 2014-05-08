@@ -1070,6 +1070,7 @@ module ActiveResource
     def initialize(attributes = {}, persisted = false)
       @attributes     = {}.with_indifferent_access
       @prefix_options = {}
+      @association_cache = {}
       @persisted = persisted
       load(attributes, false, persisted)
     end
@@ -1574,16 +1575,17 @@ module ActiveResource
 
   class Base
     extend ActiveModel::Naming
-    extend ActiveResource::Associations
+    include ActiveResource::Associations
 
-    include Callbacks, CustomMethods, Observing, Validations
+    include Callbacks, Core, CustomMethods, Observing, Validations
     include ActiveModel::Conversion
     include ActiveModel::Serializers::JSON
     include ActiveModel::Serializers::Xml
     include ActiveResource::Reflection
     include ActiveModel::Dirty
+    extend ActiveResource::Associations::Delegation::DelegateCache
+    
   end
 
   ActiveSupport.run_load_hooks(:active_resource, Base)
 end
-

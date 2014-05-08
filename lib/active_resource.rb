@@ -32,6 +32,7 @@ module ActiveResource
   autoload :Base
   autoload :Callbacks
   autoload :Connection
+  autoload :Core
   autoload :CustomMethods
   autoload :Formats
   autoload :HttpMock
@@ -43,4 +44,3 @@ module ActiveResource
 end
 
 require 'active_resource/railtie' if defined? Rails
-

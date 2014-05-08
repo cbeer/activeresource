@@ -53,33 +53,4 @@ class AssociationTest < ActiveSupport::TestCase
     External::Person.belongs_to(:Customer)
     assert_equal 1, External::Person.reflections.select{|name, reflection| reflection.macro.eql?(:belongs_to)}.count
   end
-
-  def test_defines_belongs_to_finder_method_with_instance_variable_cache
-    Person.defines_belongs_to_finder_method(:customer, Customer, 'customer_id')
-
-    person = Person.new
-    assert !person.instance_variable_defined?(:@customer)
-    person.stubs(:customer_id).returns(2)
-    Customer.expects(:find).with(2).once()
-    2.times{person.customer}
-    assert person.instance_variable_defined?(:@customer)
-  end
-
-  def test_belongs_to_with_finder_key
-    Person.defines_belongs_to_finder_method(:customer, Customer, 'customer_id')
-
-    person = Person.new
-    person.stubs(:customer_id).returns(1)
-    Customer.expects(:find).with(1).once()
-    person.customer
-  end
-
-  def test_belongs_to_with_nil_finder_key
-    Person.defines_belongs_to_finder_method(:customer, Customer, 'customer_id')
-
-    person = Person.new
-    person.stubs(:customer_id).returns(nil)
-    Customer.expects(:find).with(nil).never()
-    person.customer
-  end
 end

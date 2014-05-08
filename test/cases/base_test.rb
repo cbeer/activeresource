@@ -1,5 +1,6 @@
 require 'abstract_unit'
 require "fixtures/person"
+require "fixtures/product"
 require "fixtures/customer"
 require "fixtures/street_address"
 require "fixtures/sound"
