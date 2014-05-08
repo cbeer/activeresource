@@ -1,6 +1,11 @@
 module ActiveResource::Associations::Builder 
   class SingularAssociation < Association
 
+    def self.define_accessors(model, reflection)
+      super
+      define_constructors(model.generated_association_methods, reflection.name) if reflection.constructable?
+    end
+
     # Defines the (build|create)_association methods for belongs_to or has_one association
     def self.define_constructors(mixin, name)
       mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1

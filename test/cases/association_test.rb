@@ -53,4 +53,11 @@ class AssociationTest < ActiveSupport::TestCase
     External::Person.belongs_to(:Customer)
     assert_equal 1, External::Person.reflections.select{|name, reflection| reflection.macro.eql?(:belongs_to)}.count
   end
+  
+  def test_belongs_to_builder
+    External::Person.belongs_to(:customer)
+    p = External::Person.new
+    c = p.build_customer
+    assert_kind_of Customer, c
+  end
 end

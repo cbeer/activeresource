@@ -18,12 +18,10 @@ module ActiveResource
       def replace(record)
         if record
           raise_on_type_mismatch!(record)
-          update_counters(record)
           replace_keys(record)
           set_inverse_instance(record)
           @updated = true
         else
-          decrement_counters
           remove_keys
         end
 
@@ -39,44 +37,10 @@ module ActiveResource
         @updated
       end
 
-      def decrement_counters # :nodoc:
-        with_cache_name { |name| decrement_counter name }
-      end
-
-      def increment_counters # :nodoc:
-        with_cache_name { |name| increment_counter name }
-      end
-
       private
 
         def find_target?
           !loaded? && foreign_key_present? && klass
-        end
-
-        def with_cache_name
-          counter_cache_name = reflection.counter_cache_column
-          return unless counter_cache_name && owner.persisted?
-          yield counter_cache_name
-        end
-
-        def update_counters(record)
-          with_cache_name do |name|
-            return unless different_target? record
-            record.class.increment_counter(name, record.id)
-            decrement_counter name
-          end
-        end
-
-        def decrement_counter(counter_cache_name)
-          if foreign_key_present?
-            klass.decrement_counter(counter_cache_name, target_id)
-          end
-        end
-
-        def increment_counter(counter_cache_name)
-          if foreign_key_present?
-            klass.increment_counter(counter_cache_name, target_id)
-          end
         end
 
         # Checks whether record is different to the current target, without loading it
@@ -85,7 +49,7 @@ module ActiveResource
         end
 
         def replace_keys(record)
-          owner.attributes[reflection.foreign_key] = record[reflection.association_primary_key(record.class)]
+          owner.attributes[reflection.foreign_key] = record.attributes[reflection.association_primary_key(record.class)]
         end
 
         def remove_keys

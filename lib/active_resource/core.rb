@@ -2,10 +2,18 @@ module ActiveResource
   module Core
     extend ActiveSupport::Concern
     
+    included do
+      initialize_generated_modules
+    end
+    
     module ClassMethods
-      def initialize_generated_modules
+      
+      def inherited(child_class) #:nodoc:
+        child_class.initialize_generated_modules
         super
-
+      end
+      
+      def initialize_generated_modules
         generated_association_methods
       end
 

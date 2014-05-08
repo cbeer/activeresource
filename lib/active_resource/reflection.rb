@@ -36,6 +36,7 @@ module ActiveResource
 
       def initialize(macro, name, options)
         @macro, @name, @options = macro, name, options
+        @constructable = calculate_constructable(macro, options)
       end
 
       # Returns the name of the macro.
@@ -77,6 +78,12 @@ module ActiveResource
         end
       end
       
+      # Returns a new, unsaved instance of the associated class. +attributes+ will
+      # be passed to the class's constructor.
+      def build_association(attributes, &block)
+        klass.new(attributes, &block)
+      end
+      
       # Returns the class for the macro.
       #
       # <tt>has_many :clients</tt> returns the Client class
@@ -94,6 +101,10 @@ module ActiveResource
       # Returns the foreign_key for the macro.
       def foreign_key
         @foreign_key ||= self.options[:foreign_key] || "#{self.name.to_s.downcase}_id"
+      end
+      
+      def association_primary_key klass
+        klass.primary_key
       end
       
       def check_validity!
@@ -118,7 +129,20 @@ module ActiveResource
         @inverse_of ||= klass.reflect_on_association inverse_name
       end
 
+      def constructable? # :nodoc:
+        @constructable
+      end
       private
+      def calculate_constructable(macro, options)
+        case macro
+        when :belongs_to
+          !options[:polymorphic]
+        when :has_one
+          !options[:through]
+        else
+          true
+        end
+      end
       def derive_class_name
         return (options[:class_name] ? options[:class_name].to_s : name.to_s).classify
       end
