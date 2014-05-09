@@ -4,18 +4,17 @@ module ActiveResource::Associations::Builder
     class << self
       attr_accessor :extensions
     end
-        self.extensions = []
-
+    
+    self.extensions = []
 
     # providing a Class-Variable, which will have a different store of subclasses
     class_attribute :valid_options
-    self.valid_options = [:class_name]
+    self.valid_options = [:class_name, :validate]
 
     # would identify subclasses of association
     class_attribute :macro
 
     attr_reader :model, :name, :options, :klass
-
 
     def self.build(model, name, options)      
       builder = create_builder model, name, options
@@ -35,6 +34,7 @@ module ActiveResource::Associations::Builder
     end
     
     def define_extensions(model)
+      # no-op
     end
     
     # Defines the setter and getter methods for the association
@@ -58,19 +58,23 @@ module ActiveResource::Associations::Builder
     end
 
     def self.define_readers(mixin, name)
-      mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
-        def #{name}(*args)
-          association(:#{name}).reader(*args)
-        end
-      CODE
+      silence_warnings do
+        mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
+          def #{name}(*args)
+            association(:#{name}).reader(*args)
+          end
+        CODE
+      end
     end
 
     def self.define_writers(mixin, name)
-      mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
-        def #{name}=(value)
-          association(:#{name}).writer(value)
-        end
-      CODE
+      silence_warnings do
+        mixin.class_eval <<-CODE, __FILE__, __LINE__ + 1
+          def #{name}=(value)
+            association(:#{name}).writer(value)
+          end
+        CODE
+      end
     end
 
     def build

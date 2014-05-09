@@ -31,6 +31,7 @@ def setup_response
   @posts = [{:id => 1, :title => 'Hello World', :body => 'Lorem Ipsum'},{:id => 2, :title => 'Second Post', :body => 'Lorem Ipsum'}].to_json
   @comments = [{:id => 1, :post_id => 1, :content => 'Interesting post'},{:id => 2, :post_id => 1, :content => 'I agree'}].to_json
   @comment = { :comment => {:id => 1, :post_id => 1, :content => 'Interesting post'} }.to_json
+  @customer = { :id => 2, :name => "Sally" }.to_json
   # - deep nested resource -
   # - Luis (Customer)
   #   - JK (Customer::Friend)

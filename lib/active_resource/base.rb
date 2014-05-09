@@ -953,6 +953,7 @@ module ActiveResource
             raise(MissingPrefixParam, "#{p} prefix_option is missing") if p_options[p].blank?
           end
         end
+        
 
         # Find every resource
         def find_every(options)

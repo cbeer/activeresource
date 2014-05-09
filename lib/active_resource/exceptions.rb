@@ -6,10 +6,22 @@ module ActiveResource
   class ActiveResourceError < StandardError
   end
   
+  class AssociationTypeMismatch < ActiveResourceError
+  end
+  
+  class DeleteRestrictionError < ActiveResourceError
+  end
+  
   class ConfigurationError < ActiveResourceError
   end
   
-  class ConnectionError < StandardError # :nodoc:
+  class RecordNotSaved < ActiveResourceError
+  end
+  
+  class RecordInvalid < ActiveResourceError
+  end
+  
+  class ConnectionError < ActiveResourceError # :nodoc:
     attr_reader :response
 
     def initialize(response, message = nil)

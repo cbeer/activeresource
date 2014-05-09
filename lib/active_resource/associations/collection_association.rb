@@ -43,13 +43,8 @@ module ActiveResource
 
       # Implements the ids reader method, e.g. foo.item_ids for Foo.has_many :items
       def ids_reader
-        if loaded?
-          load_target.map do |record|
-            record.send(reflection.association_primary_key)
-          end
-        else
-          column  = "#{reflection.quoted_table_name}.#{reflection.association_primary_key}"
-          scope.pluck(column)
+        load_target.map do |record|
+          record.send(reflection.association_primary_key)
         end
       end
 
@@ -67,11 +62,7 @@ module ActiveResource
       end
 
       def select(*fields)
-        if block_given?
-          load_target.select.each { |e| yield e }
-        else
-          scope.select(*fields)
-        end
+        load_target.select.each { |e| yield e }
       end
 
       def find(*args)
@@ -149,22 +140,7 @@ module ActiveResource
           load_target
           concat_records(records)
         else
-          transaction { concat_records(records) }
-        end
-      end
-
-      # Starts a transaction in the association class's database connection.
-      #
-      #   class Author < ActiveRecord::Base
-      #     has_many :books
-      #   end
-      #
-      #   Author.first.books.transaction do
-      #     # same effect as calling Book.transaction
-      #   end
-      def transaction(*args)
-        reflection.klass.transaction(*args) do
-          yield
+          concat_records(records)
         end
       end
 
@@ -210,30 +186,9 @@ module ActiveResource
         end
       end
 
-      # Count all records using SQL.  Construct options and pass them with
-      # scope to the target class's +count+.
-      def count(column_name = nil, count_options = {})
-        # TODO: Remove count_options argument as soon we remove support to
-        # activerecord-deprecated_finders.
-        column_name, count_options = nil, column_name if column_name.is_a?(Hash)
-
-        relation = scope
-        if association_scope.distinct_value
-          # This is needed because 'SELECT count(DISTINCT *)..' is not valid SQL.
-          column_name ||= reflection.klass.primary_key
-          relation = relation.distinct
-        end
-
-        value = relation.count(column_name)
-
-        limit  = options[:limit]
-        offset = options[:offset]
-
-        if limit || offset
-          [ [value - offset.to_i, 0].max, limit.to_i ].min
-        else
-          value
-        end
+      # Count all records
+      def count
+        length
       end
 
       # Removes +records+ from this association calling +before_remove+ and
@@ -269,31 +224,13 @@ module ActiveResource
         delete_or_destroy(records, :destroy)
       end
 
-      # Returns the size of the collection by executing a SELECT COUNT(*)
-      # query if the collection hasn't been loaded, and calling
-      # <tt>collection.size</tt> if it has.
+      # Returns the size of the collection.
       #
       # If the collection has been already loaded +size+ and +length+ are
       # equivalent. If not and you are going to need the records anyway
-      # +length+ will take one less query. Otherwise +size+ is more efficient.
-      #
-      # This method is abstract in the sense that it relies on
-      # +count_records+, which is a method descendants have to provide.
+      # +length+ will take one less query. Otherwise +size+ may be more efficient.
       def size
-        if !find_target? || loaded?
-          if association_scope.distinct_value
-            target.uniq.size
-          else
-            target.size
-          end
-        elsif !loaded? && !association_scope.group_values.empty?
-          load_target.size
-        elsif !loaded? && !association_scope.distinct_value && target.is_a?(Array)
-          unsaved_records = target.select { |r| r.new_record? }
-          unsaved_records.size + count_records
-        else
-          count_records
-        end
+        length
       end
 
       # Returns the size of the collection calling +size+ on the target.
@@ -359,7 +296,7 @@ module ActiveResource
           replace_records(other_array, original_target)
         else
           if other_array != original_target
-            transaction { replace_records(other_array, original_target) }
+            replace_records(other_array, original_target)
           end
         end
       end
@@ -451,17 +388,15 @@ module ActiveResource
 
         def _create_record(attributes, raise = false, &block)
           unless owner.persisted?
-            raise ActiveRecord::RecordNotSaved, "You cannot call create unless the parent is saved"
+            raise ActiveResource::RecordNotSaved, "You cannot call create unless the parent is saved"
           end
 
           if attributes.is_a?(Array)
             attributes.collect { |attr| _create_record(attr, raise, &block) }
           else
-            transaction do
-              add_to_target(build_record(attributes)) do |record|
-                yield(record) if block_given?
-                insert_record(record, true, raise)
-              end
+            add_to_target(build_record(attributes)) do |record|
+              yield(record) if block_given?
+              insert_record(record, true, raise)
             end
           end
         end
@@ -538,35 +473,8 @@ module ActiveResource
           owner.class.send(full_callback_name)
         end
 
-        # Should we deal with assoc.first or assoc.last by issuing an independent query to
-        # the database, or by getting the target, and then taking the first/last item from that?
-        #
-        # If the args is just a non-empty options hash, go to the database.
-        #
-        # Otherwise, go to the database only if none of the following are true:
-        #   * target already loaded
-        #   * owner is new record
-        #   * target contains new or changed record(s)
-        def fetch_first_nth_or_last_using_find?(args)
-          if args.first.is_a?(Hash)
-            true
-          else
-            !(loaded? ||
-              owner.new_record? ||
-              target.any? { |record| record.new_record? || record.changed? })
-          end
-        end
-
         def include_in_memory?(record)
-          if reflection.is_a?(ActiveRecord::Reflection::ThroughReflection)
-            assoc = owner.association(reflection.through_reflection.name)
-            assoc.reader.any? { |source|
-              target = source.send(reflection.source_reflection.name)
-              target.respond_to?(:include?) ? target.include?(record) : target == record
-            } || target.include?(record)
-          else
-            target.include?(record)
-          end
+          target.include?(record)
         end
 
         # If the :inverse_of option has been
@@ -588,8 +496,7 @@ module ActiveResource
         def first_nth_or_last(type, *args)
           args.shift if args.first.is_a?(Hash) && args.first.empty?
 
-          collection = fetch_first_nth_or_last_using_find?(args) ? scope : load_target
-          collection.send(type, *args).tap do |record|
+          load_target.send(type, *args).tap do |record|
             set_inverse_instance record if record.is_a? ActiveRecord::Base
           end
         end

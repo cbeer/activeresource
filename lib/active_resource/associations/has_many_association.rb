@@ -8,19 +8,19 @@ module ActiveResource
     class HasManyAssociation < CollectionAssociation #:nodoc:
 
       def scope(opts = {})
-          if owner.attributes.include?(reflection.name)
-            owner.attributes[reflection.name]
-          elsif !owner.new_record?
-            klass.find(:all, :params => {:"#{owner.class.element_name}_id" => owner.id})
-          else
-            owner.class.collection_parser.new
-          end
+        if owner.attributes.include?(reflection.name)
+          owner.attributes[reflection.name]
+        elsif !owner.new_record?
+          klass.find(:all, :params => {:"#{owner.class.element_name}_id" => owner.id})
+        else
+          owner.class.collection_parser.new
+        end
       end
 
       def handle_dependency
         case options[:dependent]
         when :restrict_with_exception
-          raise ActiveRecord::DeleteRestrictionError.new(reflection.name) unless empty?
+          raise ActiveResource::DeleteRestrictionError.new(reflection.name) unless empty?
 
         when :restrict_with_error
           unless empty?
@@ -31,7 +31,6 @@ module ActiveResource
 
         else
           if options[:dependent] == :destroy
-            # No point in executing the counter update since we're going to destroy the parent anyway
             load_target.each { |t| t.destroyed_by_association = reflection }
             destroy_all
           else
@@ -67,35 +66,14 @@ module ActiveResource
         # If the collection is empty the target is set to an empty array and
         # the loaded flag is set to true as well.
         def count_records
-          count = if has_cached_counter?
-            owner.read_attribute cached_counter_attribute_name
-          else
-            scope.count
-          end
+          count = scope.count
 
           # If there's nothing in the database and @target has no new records
           # we are certain the current target is an empty array. This is a
-          # documented side-effect of the method that may avoid an extra SELECT.
+          # documented side-effect of the method.
           @target ||= [] and loaded! if count == 0
 
           [association_scope.limit_value, count].compact.min
-        end
-
-        def has_cached_counter?(reflection = reflection())
-          owner.attribute_present?(cached_counter_attribute_name(reflection))
-        end
-
-        def cached_counter_attribute_name(reflection = reflection())
-          options[:counter_cache] || "#{reflection.name}_count"
-        end
-
-        def update_counter(difference, reflection = reflection())
-          if has_cached_counter?(reflection)
-            counter = cached_counter_attribute_name(reflection)
-            owner.class.update_counters(owner.id, counter => difference)
-            owner[counter] += difference
-            owner.changed_attributes.delete(counter) # eww
-          end
         end
 
         # This shit is nasty. We need to avoid the following situation:
@@ -119,18 +97,11 @@ module ActiveResource
         def delete_records(records, method)
           if method == :destroy
             records.each(&:destroy!)
-            update_counter(-records.length) unless inverse_updates_counter_cache?
           else
             if records == :all || !reflection.klass.primary_key
-              scope = self.scope
+              load_target.each { |r| r.send method }
             else
-              scope = self.scope.where(reflection.klass.primary_key => records)
-            end
-
-            if method == :delete_all
-              update_counter(-scope.delete_all)
-            else
-              update_counter(-scope.update_all(reflection.foreign_key => nil))
+              records.each { |r| r.send method }
             end
           end
         end

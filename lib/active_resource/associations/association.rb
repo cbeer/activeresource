@@ -27,7 +27,6 @@ module ActiveResource
         @owner, @reflection = owner, reflection
 
         reset
-        reset_scope
       end
 
       # Returns the name of the table of the associated class:
@@ -49,7 +48,6 @@ module ActiveResource
       # Reloads the \target and returns +self+ on success.
       def reload
         reset
-        reset_scope
         load_target
         self unless target.nil?
       end
@@ -83,23 +81,7 @@ module ActiveResource
       end
 
       def scope
-        OpenStruct.new klass: klass
-      end
-
-      # The scope for this association.
-      #
-      # Note that the association_scope is merged into the target_scope only when the
-      # scope method is called. This is because at that point the call may be surrounded
-      # by scope.scoping { ... } or with_scope { ... } etc, which affects the scope which
-      # actually gets built.
-      def association_scope
-        if klass
-          @association_scope ||= AssociationScope.scope(self, klass.connection)
-        end
-      end
-
-      def reset_scope
-        @association_scope = nil
+        reflection
       end
 
       # Set the inverse association, if possible
@@ -116,12 +98,6 @@ module ActiveResource
       # polymorphic_type field on the owner.
       def klass
         reflection.klass
-      end
-
-      # Can be overridden (i.e. in ThroughAssociation) to merge in other scopes (i.e. the
-      # through association's scope)
-      def target_scope
-        AssociationRelation.create(klass, self).merge!(klass.all)
       end
 
       # Loads the \target if needed and returns it.
@@ -143,15 +119,7 @@ module ActiveResource
         reset
       end
 
-      def interpolate(sql, record = nil)
-        if sql.respond_to?(:to_proc)
-          owner.instance_exec(record, &sql)
-        else
-          sql
-        end
-      end
-
-      # We can't dump @reflection since it contains the scope proc
+      # We can't dump @reflection since it may contain a scope proc
       def marshal_dump
         ivars = (instance_variables - [:@reflection]).map { |name| [name, instance_variable_get(name)] }
         [@reflection.name, ivars]
@@ -179,12 +147,8 @@ module ActiveResource
         def creation_attributes
           attributes = {}
 
-          if (reflection.macro == :has_one || reflection.macro == :has_many) && !options[:through]
+          if (reflection.macro == :has_one || reflection.macro == :has_many)
             attributes[reflection.foreign_key] = owner[reflection.active_record_primary_key]
-
-            if reflection.options[:as]
-              attributes[reflection.type] = owner.class.base_class.name
-            end
           end
 
           attributes
@@ -207,13 +171,13 @@ module ActiveResource
           false
         end
 
-        # Raises ActiveRecord::AssociationTypeMismatch unless +record+ is of
+        # Raises ActiveResource::AssociationTypeMismatch unless +record+ is of
         # the kind of the class of the associated objects. Meant to be used as
         # a sanity check when you are about to assign an associated record.
         def raise_on_type_mismatch!(record)
           unless record.is_a?(reflection.klass) || record.is_a?(reflection.class_name.constantize)
             message = "#{reflection.class_name}(##{reflection.klass.object_id}) expected, got #{record.class}(##{record.class.object_id})"
-            raise ActiveRecord::AssociationTypeMismatch, message
+            raise ActiveResource::AssociationTypeMismatch, message
           end
         end
 

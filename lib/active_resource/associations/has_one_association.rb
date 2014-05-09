@@ -6,7 +6,7 @@ module ActiveResource
       def handle_dependency
         case options[:dependent]
         when :restrict_with_exception
-          raise ActiveRecord::DeleteRestrictionError.new(reflection.name) if load_target
+          raise ActiveResource::DeleteRestrictionError.new(reflection.name) if load_target
 
         when :restrict_with_error
           if load_target
@@ -45,18 +45,16 @@ module ActiveResource
         if assigning_another_record || record.changed?
           save &&= owner.persisted?
 
-          transaction_if(save) do
-            remove_target!(options[:dependent]) if target && !target.destroyed? && assigning_another_record
+          remove_target!(options[:dependent]) if target && !target.destroyed? && assigning_another_record
 
-            if record
-              set_owner_attributes(record)
-              set_inverse_instance(record)
+          if record
+            set_owner_attributes(record)
+            set_inverse_instance(record)
 
-              if save && !record.save
-                nullify_owner_attributes(record)
-                set_owner_attributes(target) if target
-                raise RecordNotSaved, "Failed to save the new associated #{reflection.name}."
-              end
+            if save && !record.save
+              nullify_owner_attributes(record)
+              set_owner_attributes(target) if target
+              raise RecordNotSaved, "Failed to save the new associated #{reflection.name}."
             end
           end
         end
@@ -106,14 +104,6 @@ module ActiveResource
 
         def nullify_owner_attributes(record)
           record[reflection.foreign_key] = nil
-        end
-
-        def transaction_if(value)
-          if value
-            reflection.klass.transaction { yield }
-          else
-            yield
-          end
         end
     end
   end

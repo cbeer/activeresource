@@ -152,6 +152,7 @@ module ActiveResource
       def constructable? # :nodoc:
         @constructable
       end
+
       private
       def calculate_constructable(macro, options)
         case macro
@@ -163,6 +164,7 @@ module ActiveResource
           true
         end
       end
+
       def derive_class_name
         return (options[:class_name] ? options[:class_name].to_s : name.to_s).classify
       end
@@ -170,71 +172,73 @@ module ActiveResource
       def derive_foreign_key
         return options[:foreign_key] ? options[:foreign_key].to_s : "#{name.to_s.downcase}_id"
       end
-              # Attempts to find the inverse association name automatically.
-              # If it cannot find a suitable inverse association name, it returns
-              # nil.
-              def inverse_name
-                options.fetch(:inverse_of) do
-                  if @automatic_inverse_of == false
-                    nil
-                  else
-                    @automatic_inverse_of ||= automatic_inverse_of
-                  end
-                end
-              end
+
+      # Attempts to find the inverse association name automatically.
+      # If it cannot find a suitable inverse association name, it returns
+      # nil.
+      def inverse_name
+        options.fetch(:inverse_of) do
+          if @automatic_inverse_of == false
+            nil
+          else
+            @automatic_inverse_of ||= automatic_inverse_of
+          end
+        end
+      end
               
-        # returns either nil or the inverse association name that it finds.
-        def automatic_inverse_of
-          if can_find_inverse_of_automatically?(self)
-            inverse_name = ActiveSupport::Inflector.underscore(derive_class_name).to_sym
+      # returns either nil or the inverse association name that it finds.
+      def automatic_inverse_of
+        if can_find_inverse_of_automatically?(self)
+          inverse_name = ActiveSupport::Inflector.underscore(derive_class_name).to_sym
 
-            begin
-              reflection = klass.reflect_on_association(inverse_name)
-            rescue NameError
-              # Give up: we couldn't compute the klass type so we won't be able
-              # to find any associations either.
-              reflection = false
-            end
-
-            if valid_inverse_reflection?(reflection)
-              return inverse_name
-            end
+          begin
+            reflection = klass.reflect_on_association(inverse_name)
+          rescue NameError
+            # Give up: we couldn't compute the klass type so we won't be able
+            # to find any associations either.
+            reflection = false
           end
 
-          false
+          if valid_inverse_reflection?(reflection)
+            return inverse_name
+          end
         end
-        
-        # Checks if the inverse reflection that is returned from the
-        # +automatic_inverse_of+ method is a valid reflection. We must
-        # make sure that the reflection's active_record name matches up
-        # with the current reflection's klass name.
-        #
-        # Note: klass will always be valid because when there's a NameError
-        # from calling +klass+, +reflection+ will already be set to false.
-        def valid_inverse_reflection?(reflection)
-          reflection &&
-            klass.name == reflection.derive_class_name &&
-            can_find_inverse_of_automatically?(reflection)
-        end
-              VALID_AUTOMATIC_INVERSE_MACROS = [:has_many, :has_one, :belongs_to]
-      INVALID_AUTOMATIC_INVERSE_OPTIONS = [:conditions, :through, :polymorphic, :foreign_key]
+
+        false
+      end
+      
+      # Checks if the inverse reflection that is returned from the
+      # +automatic_inverse_of+ method is a valid reflection. We must
+      # make sure that the reflection's active_record name matches up
+      # with the current reflection's klass name.
+      #
+      # Note: klass will always be valid because when there's a NameError
+      # from calling +klass+, +reflection+ will already be set to false.
+      def valid_inverse_reflection?(reflection)
+        reflection &&
+          klass.name == reflection.derive_class_name &&
+          can_find_inverse_of_automatically?(reflection)
+      end
+      
+      VALID_AUTOMATIC_INVERSE_MACROS = [:has_many, :has_one, :belongs_to]
+      INVALID_AUTOMATIC_INVERSE_OPTIONS = [:polymorphic, :foreign_key]
 
 
-        # Checks to see if the reflection doesn't have any options that prevent
-        # us from being able to guess the inverse automatically. First, the
-        # <tt>inverse_of</tt> option cannot be set to false. Second, we must
-        # have <tt>has_many</tt>, <tt>has_one</tt>, <tt>belongs_to</tt> associations.
-        # Third, we must not have options such as <tt>:polymorphic</tt> or
-        # <tt>:foreign_key</tt> which prevent us from correctly guessing the
-        # inverse association.
-        #
-        # Anything with a scope can additionally ruin our attempt at finding an
-        # inverse, so we exclude reflections with scopes.
-        def can_find_inverse_of_automatically?(reflection)
-          reflection.options[:inverse_of] != false &&
-            VALID_AUTOMATIC_INVERSE_MACROS.include?(reflection.macro) &&
-            !INVALID_AUTOMATIC_INVERSE_OPTIONS.any? { |opt| reflection.options[opt] }
-        end
+      # Checks to see if the reflection doesn't have any options that prevent
+      # us from being able to guess the inverse automatically. First, the
+      # <tt>inverse_of</tt> option cannot be set to false. Second, we must
+      # have <tt>has_many</tt>, <tt>has_one</tt>, <tt>belongs_to</tt> associations.
+      # Third, we must not have options such as <tt>:polymorphic</tt> or
+      # <tt>:foreign_key</tt> which prevent us from correctly guessing the
+      # inverse association.
+      #
+      # Anything with a scope can additionally ruin our attempt at finding an
+      # inverse, so we exclude reflections with scopes.
+      def can_find_inverse_of_automatically?(reflection)
+        reflection.options[:inverse_of] != false &&
+          VALID_AUTOMATIC_INVERSE_MACROS.include?(reflection.macro) &&
+          !INVALID_AUTOMATIC_INVERSE_OPTIONS.any? { |opt| reflection.options[opt] }
+      end
     end
   end
 end
