@@ -805,6 +805,8 @@ module ActiveResource
       def create(attributes = {})
         self.new(attributes).tap { |resource| resource.save }
       end
+      
+      alias create! create
 
       # Core method for finding resources. Used similarly to Active Record's +find+ method.
       #
@@ -1423,6 +1425,15 @@ module ActiveResource
       super({ :root => self.class.element_name }.merge(options))
     end
 
+
+    def [] name
+      attribute(name)
+    end
+
+    def []= key, value
+      send("#{key}=", value)
+    end
+    
     protected
       def connection(refresh = false)
         self.class.connection(refresh)

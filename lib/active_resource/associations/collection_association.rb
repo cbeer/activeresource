@@ -497,7 +497,7 @@ module ActiveResource
           args.shift if args.first.is_a?(Hash) && args.first.empty?
 
           load_target.send(type, *args).tap do |record|
-            set_inverse_instance record if record.is_a? ActiveRecord::Base
+            set_inverse_instance record if record.is_a? ActiveResource::Base
           end
         end
     end

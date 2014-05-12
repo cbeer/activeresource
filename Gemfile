@@ -11,3 +11,4 @@ platform :mri do
 end
 
 gem 'rubysl', '~> 2.0', :platform => :rbx
+gem 'byebug'

@@ -855,10 +855,6 @@ module ActiveResource
         !!@association.include?(record)
       end
 
-      def arel
-        scope.klass
-      end
-
       def proxy_association
         @association
       end

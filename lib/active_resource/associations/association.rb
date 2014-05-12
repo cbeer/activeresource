@@ -148,7 +148,7 @@ module ActiveResource
           attributes = {}
 
           if (reflection.macro == :has_one || reflection.macro == :has_many)
-            attributes[reflection.foreign_key] = owner[reflection.active_record_primary_key]
+            attributes[reflection.foreign_key] = owner.attributes['id']
           end
 
           attributes

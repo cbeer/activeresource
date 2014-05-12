@@ -96,7 +96,7 @@ module ActiveResource
       #
       # <tt>has_many :clients</tt> returns <tt>'Client'</tt>
       def class_name
-        @class_name ||= derive_class_name
+        @class_name ||= (options[:class_name] || derive_class_name).to_s
       end
 
       # Returns the foreign_key for the macro.
@@ -166,7 +166,7 @@ module ActiveResource
       end
 
       def derive_class_name
-        return (options[:class_name] ? options[:class_name].to_s : name.to_s).classify
+        return name.to_s.camelize
       end
 
       def derive_foreign_key

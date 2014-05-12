@@ -90,9 +90,6 @@ module ActiveResource::Associations
         if @klass.respond_to?(method)
           self.class.delegate_to_scoped_klass(method)
           scoping { @klass.public_send(method, *args, &block) }
-        elsif arel.respond_to?(method)
-          self.class.delegate method, :to => :arel
-          arel.public_send(method, *args, &block)
         else
           super
         end
@@ -113,8 +110,7 @@ module ActiveResource::Associations
 
     def respond_to?(method, include_private = false)
       super || @klass.respond_to?(method, include_private) ||
-        array_delegable?(method) ||
-        arel.respond_to?(method, include_private)
+        array_delegable?(method)
     end
 
     protected
@@ -128,8 +124,6 @@ module ActiveResource::Associations
         scoping { @klass.public_send(method, *args, &block) }
       elsif array_delegable?(method)
         to_a.public_send(method, *args, &block)
-      elsif arel.respond_to?(method)
-        arel.public_send(method, *args, &block)
       else
         super
       end
