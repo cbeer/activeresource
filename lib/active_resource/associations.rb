@@ -3,6 +3,7 @@ module ActiveResource::Associations
 
   module Builder
     autoload :Association, 'active_resource/associations/builder/association'
+    autoload :CollectionAssociation,   'active_resource/associations/builder/collection_association'
     autoload :SingularAssociation,   'active_resource/associations/builder/singular_association'
     autoload :HasMany,     'active_resource/associations/builder/has_many'
     autoload :HasOne,      'active_resource/associations/builder/has_one'

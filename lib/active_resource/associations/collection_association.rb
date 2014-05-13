@@ -326,11 +326,11 @@ module ActiveResource
         callback(:before_add, record) unless skip_callbacks
         yield(record) if block_given?
 
-        if association_scope.distinct_value && index = @target.index(record)
-          @target[index] = record
-        else
+        # if association_scope.distinct_value && index = @target.index(record)
+        #   @target[index] = record
+        # else
           @target << record
-        end
+        # end
 
         callback(:after_add, record) unless skip_callbacks
         set_inverse_instance(record)

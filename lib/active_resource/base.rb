@@ -955,7 +955,6 @@ module ActiveResource
             raise(MissingPrefixParam, "#{p} prefix_option is missing") if p_options[p].blank?
           end
         end
-        
 
         # Find every resource
         def find_every(options)
@@ -1110,6 +1109,7 @@ module ActiveResource
       resource = self.class.new({})
       resource.prefix_options = self.prefix_options
       resource.send :instance_variable_set, '@attributes', cloned
+      resource.send :instance_variable_set, '@persisted', persisted?
       resource
     end
 
@@ -1210,6 +1210,7 @@ module ActiveResource
       self.class.new.tap do |resource|
         resource.attributes     = @attributes
         resource.prefix_options = @prefix_options
+        resource.send :instance_variable_set, '@persisted', persisted?
       end
     end
 
@@ -1360,7 +1361,7 @@ module ActiveResource
               resource = find_or_create_resource_for(key)
               resource.new(value, persisted)
             else
-              value.duplicable? ? value.dup : value
+              value #.duplicable? ? value.dup : value
           end
       end
       self

@@ -4,8 +4,8 @@ module ActiveResource
     class BelongsToAssociation < SingularAssociation #:nodoc:
 
       def find_target(opts = {})
-        if owner.attributes.include?(reflection.name)
-          owner.attributes[reflection.name]
+        if owner.attributes.include?(reflection.name.to_s)
+          owner.attributes[reflection.name.to_s]
         elsif owner.attributes.include?(reflection.foreign_key)
           klass.find(owner.attributes[reflection.foreign_key])
         end
@@ -40,7 +40,11 @@ module ActiveResource
       private
 
         def find_target?
-          !loaded? && foreign_key_present? && klass
+          !loaded? && (attribute_present? || foreign_key_present?) && klass
+        end
+        
+        def attribute_present?
+          owner.attributes.has_key? reflection.name.to_s
         end
 
         # Checks whether record is different to the current target, without loading it

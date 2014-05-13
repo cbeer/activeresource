@@ -141,7 +141,7 @@ module ActiveResource
       private
 
         def find_target?
-          !loaded? && (!owner.new_record? || foreign_key_present?) && klass
+          !loaded? && (!owner.new_record? || foreign_key_present? || attribute_present?) && klass
         end
 
         def creation_attributes
@@ -168,6 +168,10 @@ module ActiveResource
         # Currently implemented by belongs_to (vanilla and polymorphic) and
         # has_one/has_many :through associations which go through a belongs_to.
         def foreign_key_present?
+          false
+        end
+        
+        def attribute_present?
           false
         end
 

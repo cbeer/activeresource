@@ -29,13 +29,8 @@ class ReflectionTest < ActiveSupport::TestCase
     assert_equal Person, object.klass
   end
 
-  def test_correct_class_name_matching_as_class
-    object = ActiveResource::Reflection::AssociationReflection.new(:test, :people, {:class_name => Person})
-    assert_equal Person, object.klass
-  end
-
   def test_correct_class_name_matching_as_string_with_namespace
-    object = ActiveResource::Reflection::AssociationReflection.new(:test, :people, {:class_name => 'external/person'})
+    object = ActiveResource::Reflection::AssociationReflection.new(:test, :people, {:class_name => "External::Person"})
     assert_equal External::Person, object.klass
   end
 

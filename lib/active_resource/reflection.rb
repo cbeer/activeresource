@@ -96,7 +96,7 @@ module ActiveResource
       #
       # <tt>has_many :clients</tt> returns <tt>'Client'</tt>
       def class_name
-        @class_name ||= (options[:class_name] || derive_class_name).to_s
+        @class_name ||= (options[:class_name] || derive_class_name).to_s.camelize
       end
 
       # Returns the foreign_key for the macro.
@@ -106,6 +106,10 @@ module ActiveResource
       
       def association_primary_key klass
         klass.primary_key
+      end
+      
+      def nested?
+        false
       end
       
       # Returns whether or not this association reflection is for a collection
@@ -153,6 +157,10 @@ module ActiveResource
         @constructable
       end
 
+      def derive_class_name
+        name.to_s.singularize.camelize
+      end
+
       private
       def calculate_constructable(macro, options)
         case macro
@@ -163,10 +171,6 @@ module ActiveResource
         else
           true
         end
-      end
-
-      def derive_class_name
-        return name.to_s.camelize
       end
 
       def derive_foreign_key

@@ -600,15 +600,17 @@ end
 
 class TestDestroyAsPartOfAutosaveAssociation < ActiveSupport::TestCase
 
+  ActiveResource::HttpMock.respond_to do |mock|
+    mock.post    "/pirates.json",               {}, {pirate: { id: 1 }}.to_json
+#    mock.post    "/ships.json",               {}, {ship: { id: 1 }}.to_json
+  end
+
   setup do
     @pirate = Pirate.create(:catchphrase => "Don' botharrr talkin' like one, savvy?")
     @ship = @pirate.create_ship(:name => 'Nights Dirty Lightning')
   end
 
   teardown do
-    # We are running without transactional models and need to cleanup.
-    Bird.delete_all
-    Parrot.delete_all
     @ship.delete
     @pirate.delete
   end
@@ -802,7 +804,6 @@ class TestDestroyAsPartOfAutosaveAssociation < ActiveSupport::TestCase
 
   def test_when_new_record_a_child_marked_for_destruction_should_not_affect_other_records_from_saving
     @pirate = @ship.build_pirate(:catchphrase => "Arr' now I shall keep me eye on you matey!") # new record
-
     3.times { |i| @pirate.birds.build(:name => "birds_#{i}") }
     @pirate.birds[1].mark_for_destruction
     @pirate.save!

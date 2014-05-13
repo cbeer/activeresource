@@ -3,6 +3,7 @@ require 'abstract_unit'
 require 'fixtures/person'
 require 'fixtures/beast'
 require 'fixtures/customer'
+require 'fixtures/post'
 
 
 class AssociationTest < ActiveSupport::TestCase

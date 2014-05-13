@@ -157,7 +157,7 @@ module ActiveResource
     #   my_person.valid?
     #   # => false
     #
-    def valid?
+    def valid? validation_context = nil
       run_callbacks :validate do
         super
         load_remote_errors(@remote_errors, true) if defined?(@remote_errors) && @remote_errors.present?

@@ -1,6 +1,6 @@
 require 'rubygems' unless defined? Gem
 require 'bundler/setup'
-
+#require 'byebug'
 lib = File.expand_path("#{File.dirname(__FILE__)}/../lib")
 $:.unshift(lib) unless $:.include?('lib') || $:.include?(lib)
 
