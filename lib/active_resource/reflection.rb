@@ -17,7 +17,7 @@ module ActiveResource
 
     module ClassMethods
       def create_reflection(macro, name, options)
-        reflection = AssociationReflection.new(macro, name, options)
+        reflection = AssociationReflection.new(macro, name, options, self)
         self.reflections = self.reflections.merge(name => reflection)
         reflection
       end
@@ -33,11 +33,14 @@ module ActiveResource
     end
 
     class AssociationReflection
+      
+      attr_reader :active_record
 
-      def initialize(macro, name, options)
+      def initialize(macro, name, options, active_record)
         @macro, @name, @options = macro, name, options
         @constructable = calculate_constructable(macro, options)
         @collection = :has_many == macro
+        @active_record = active_record
       end
 
       # Returns the name of the macro.
@@ -101,7 +104,7 @@ module ActiveResource
 
       # Returns the foreign_key for the macro.
       def foreign_key
-        @foreign_key ||= self.options[:foreign_key] || "#{self.name.to_s.downcase}_id"
+        @foreign_key ||= self.options[:foreign_key] || derive_foreign_key
       end
       
       def association_primary_key klass
@@ -117,6 +120,11 @@ module ActiveResource
       # +has_and_belongs_to_many+, +false+ otherwise.
       def collection?
         @collection
+      end
+      
+      # Returns +true+ if +self+ is a +belongs_to+ reflection.
+      def belongs_to?
+        macro == :belongs_to
       end
       # Returns whether or not the association should be validated as part of
       # the parent's validation.
@@ -174,7 +182,13 @@ module ActiveResource
       end
 
       def derive_foreign_key
-        return options[:foreign_key] ? options[:foreign_key].to_s : "#{name.to_s.downcase}_id"
+        if belongs_to?
+          "#{name}_id"
+        elsif options[:as]
+          "#{options[:as]}_id"
+        else
+          active_record.name.foreign_key
+        end
       end
 
       # Attempts to find the inverse association name automatically.

@@ -53,15 +53,15 @@ module ActiveResource
         end
 
         def replace_keys(record)
-          owner.attributes[reflection.foreign_key] = record.attributes[reflection.association_primary_key(record.class)]
+          owner[reflection.foreign_key] = record.attributes[reflection.association_primary_key(record.class)]
         end
 
         def remove_keys
-          owner.attributes[reflection.foreign_key] = nil
+          owner[reflection.foreign_key] = nil
         end
 
         def foreign_key_present?
-          owner.attributes[reflection.foreign_key]
+          owner[reflection.foreign_key]
         end
 
         # NOTE - for now, we're only supporting inverse setting from belongs_to back onto
