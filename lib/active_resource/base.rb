@@ -1583,6 +1583,8 @@ module ActiveResource
 
         if attributes.has_key?(key)
           attributes[key]
+        elsif known_attributes.include?(key)
+          nil
         else
           raise NoMethodError
         end
